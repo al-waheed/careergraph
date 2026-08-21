@@ -1,63 +1,160 @@
 # CareerGraph
 
-CareerGraph is a graph-powered job matching application that connects people, skills, jobs, and companies using CognoDB.
+CareerGraph is a graph-powered career matching application built with React, TypeScript, Express, and CognoDB.
 
-## Features
+The application connects candidates, skills, jobs, and companies and uses their relationships to find jobs that best match a candidate's skills.
 
-- View available candidates
-- Match candidates with suitable jobs
-- Calculate job match percentages based on required skills
-- Display matching skills
-- Connect companies with the jobs they offer
-- Store career relationships in a graph database
+## Why a Graph Database?
 
-## How It Works
+Career matching is a relationship-heavy problem.
 
-CareerGraph models career data as a graph:
+A candidate has skills, jobs require skills, and companies offer jobs. A graph database allows these relationships to be stored and traversed directly.
 
-Person → HAS_SKILL → Skill
-
-Job → REQUIRES → Skill
-
-Company → OFFERS → Job
-
-The application uses Cypher queries to traverse these relationships and determine which jobs best match a candidate's skills.
-
-## Tech Stack
-
-### Frontend
-
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-
-### Backend
-
-- Node.js
-- Express
-- TypeScript
-
-### Database
-
-- CognoDB
-- Cypher
-- Neo4j-compatible driver
-
-## Project Structure
+For example:
 
 ```text
-careergraph/
-├── client/
-│   └── src/
-│
-├── server/
-│   └── src/
-│       ├── db/
-│       │   └── neo4j.ts
-│       ├── routes/
-│       │   └── jobs.ts
-│       └── server.ts
-│
-└── README.md
+Person
+   │
+   └── HAS_SKILL ──→ Skill
+                         ↑
+                         │
+                      REQUIRES
+                         │
+                        Job
+                         ↑
+                         │
+                       OFFERS
+                         │
+                      Company
+
+The application performs multi-hop traversal such as:
+
+Person → HAS_SKILL → Skill ← REQUIRES ← Job
+
+This makes it straightforward to find jobs based on the skills connected to a candidate. The same query would require multiple joins and relationship tables in a relational database.
+
+Data Model
+Nodes
+Person — name, location
+Skill — name, category
+Job — title
+Company — name
+Relationships
+Person -[:HAS_SKILL]-> Skill
+Job -[:REQUIRES]-> Skill
+Company -[:OFFERS]-> Job
+Main Queries
+Get Candidates
+MATCH (person:Person)
+RETURN person.name AS name, person.location AS location
+ORDER BY person.name
+Find Matching Jobs
+MATCH (person:Person {name: $personName})
+  -[:HAS_SKILL]->(skill:Skill)
+  <-[:REQUIRES]-(job:Job)
+
+
+WITH person, job, COUNT(DISTINCT skill) AS matchingSkills
+
+
+MATCH (job)-[:REQUIRES]->(requiredSkill:Skill)
+
+
+WITH
+  person.name AS person,
+  job.title AS job,
+  matchingSkills,
+  COUNT(requiredSkill) AS totalRequiredSkills
+
+
+RETURN
+  person,
+  job,
+  matchingSkills,
+  totalRequiredSkills,
+  ROUND(
+    (toFloat(matchingSkills) / totalRequiredSkills) * 100
+  ) AS matchPercentage
+
+
+ORDER BY matchPercentage DESC
+
+The query is parameterized using $personName rather than concatenating user input into the Cypher query.
+
+Seed Data
+
+The repository includes a seed script that creates realistic data for:
+
+People
+Skills
+Jobs
+Companies
+Candidate skills
+Job requirements
+Company/job relationships
+
+Run the seed script with:
+
+npm run seed
+Setup
+1. Create a CognoDB Instance
+
+Create a free CognoDB instance at:
+
+https://console.cognodb.com
+
+Copy the connection URI and generated password.
+
+2. Environment Variables
+
+Create a .env file in the server directory:
+
+NEO4J_URI=your-cognodb-uri
+NEO4J_USERNAME=cognodb
+NEO4J_PASSWORD=your-password
+PORT=4000
+
+The credentials must not be committed to GitHub.
+
+3. Run the Backend
+cd server
+npm install
+npm run seed
+npm run dev
+4. Run the Frontend
+
+In another terminal:
+
+cd client
+npm install
+npm run dev
+Architecture
+React + TypeScript
+        │
+        │ HTTP
+        ▼
+Express + TypeScript
+        │
+        │ Neo4j Driver / Bolt
+        ▼
+CognoDB
+Screenshots
+
+Screenshots of the working application are included below.
+
+Candidate Selection
+
+Add screenshot here.
+
+Job Matching Results
+
+Add screenshot here.
+
+Hosted Demo
+
+Add hosted application link here.
+
+GitHub Repository
+
+https://github.com/al-waheed/careergraph
 ```

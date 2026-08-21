@@ -25,7 +25,7 @@ function App() {
   useEffect(() => {
     async function loadPeople() {
       try {
-        const response = await fetch("http://localhost:4000/api/jobs/people");
+        const response = await fetch("http://https://careergraph-api-ghek.onrender.com/api/jobs/people");
 
         if (!response.ok) {
           throw new Error("Failed to load candidates");
@@ -55,7 +55,7 @@ function App() {
 
     try {
       const response = await fetch(
-        `http://localhost:4000/api/jobs/match/${encodeURIComponent(
+        `http://https://careergraph-api-ghek.onrender.com/api/jobs/match/${encodeURIComponent(
           selectedPerson,
         )}`,
       );
