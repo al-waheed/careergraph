@@ -233,7 +233,6 @@ The production frontend is hosted on **Netlify**, while the Express backend is h
 ## Screen Recording
 
 A short walkthrough demonstrating the application's candidate selection and job matching functionality is included with the submission.
-![Watch the CareerGraph demo](/demo/Screen%20Recording%202026-08-21%20at%2012.30.33.mov)
 
 ## Technology Stack
 
